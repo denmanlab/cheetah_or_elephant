@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+## Beth updated 7.6.20 to include updating/saving frame rates (dT)
+
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 from direct.interval.MetaInterval import Sequence
@@ -9,7 +12,7 @@ from panda3d.core import Mat4, WindowProperties, CardMaker, NodePath, TextureSta
 from panda3d.core import KeyboardButton
 from direct.gui.OnscreenText import OnscreenText
 
-import sys, glob, time, datetime, os, getopt, subprocess
+import sys, glob, time, datetime, os, getopt
 from math import pi, sin, cos
 from numpy.random import randint, exponential
 from numpy import arange, concatenate
@@ -42,18 +45,18 @@ REWARD_VOLUME = 10  # in µL
 REWARD_WINDOW = 2.0  # in seconds
 
 #make sure we have the most recent user list
-subprocess.call('osf -p cy643 fetch -f -U .user_ids.npy',shell=True)
+os.system('git config core.sshCommand "ssh -i .ssh/user-key"')
+os.system('git pull')
 
 #load (or make) the an anonymized used id for this repo
-extant_user_ids = np.fromfile('.user_ids.npy')
+extant_user_ids = np.load('.user_ids.npy')
 if os.path.isfile('.user_id.npy'):
-    MOUSE_ID = 'user'+str(np.fromfile('.user_id.npy')[0])
+    MOUSE_ID = 'user'+str(np.load('.user_ids.npy')[0])
 else:
     extant_user_ids = np.append(extant_user_ids,int(len(extant_user_ids)))
-    np.array([extant_user_ids[-1]]).tofile('.user_id.npy')  
-    extant_user_ids.tofile('.user_ids.npy')  
+    np.save('.user_id.npy',np.array([extant_user_ids[-1]]))  
+    np.save('.user_ids.npy',extant_user_ids)  
     MOUSE_ID = 'user'+str(extant_user_ids[-1])
-    subprocess.call('osf -p cy643 -u denmanlab@gmail.com upload -f -U .user_ids.npy .user_ids.npy',shell=True)
     
 # getopt.getopt(args, options, [long_options])
 
@@ -94,7 +97,7 @@ class MouseTunnel(ShowBase):
 
         # session_start
         self.session_start_time = datetime.datetime.now()
-        self.save_path = ''
+
         # self.accept("escape", sys.exit, [0])#don't let the user do this, because then the data isn't saved.
         self.accept('q', self.close)
         self.accept('Q', self.close)
@@ -115,13 +118,13 @@ class MouseTunnel(ShowBase):
 
         props = WindowProperties()
         # props.setOrigin(0, 0)
-        props.setFullscreen(False)
+        props.setFullscreen(True)
         props.setCursorHidden(True)
         props.setMouseMode(WindowProperties.M_relative)
         base.win.requestProperties(props)
         base.setBackgroundColor(0, 0, 0)  # set the background color to black
 
-        print('FULLSCREEN:')
+        print('FULSCREEN:')
         print(props.getFullscreen())
         print('=============')
         # set up the textures
@@ -168,13 +171,9 @@ class MouseTunnel(ShowBase):
         self.scoreLabel = OnscreenText(text='Current Score:', pos=(-1, 0.9), scale=0.1, fg=(0.8, 0.8, 0.8, 1))
         self.scoreText = OnscreenText(text=str(0), pos=(-1, 0.76), scale=0.18, fg=(0, 1, 0, 1),
                                       shadow=(0.1, 1, 0.1, 0.5))
-        self.feebackScoreText = OnscreenText(text='+ ' + str(0), pos=(-0.2, 0.5), scale=0.15, fg=(0, 1, 0, 1),
+        self.feebackScoreText = OnscreenText(text='+ ' + str(0), pos=(-0.5, 0.5), scale=0.3, fg=(0, 1, 0, 1),
                                              shadow=(0.1, 1, 0.1, 0.5))
         self.feebackScoreText.setX(3.)
-        self.saveLabel = OnscreenText(text='Saving anonymized data to a secure location', pos=(0, 0.21), scale=0.1, fg=(0.8, 0.8, 0.8, 1),bg=(0,0,0,1))
-        self.saveLabel2 = OnscreenText(text='...please be patient...',  pos=(0,0), scale=0.2, fg=(0.8, 0.8, 0.8, 1),bg=(0,0,0,1))
-        self.saveLabel.setX(3.)
-        self.saveLabel2.setX(3.)
 
         # self.imagesTexture.play()
 
@@ -204,8 +203,9 @@ class MouseTunnel(ShowBase):
         
        
         self.distribution_type = np.random.uniform#
-        self.distribution_type_inputs = [0.03,0.75] #can be anytong should match 
-        
+#        self.distribution_type_inputs = [0.05,1.5] #can be anytong should match 
+        self.distribution_type_inputs = [0.016,0.4] #change the min & max stim duration times
+
         self.max_stim_duration = 1.0  # in seconds
         self.stim_elapsed = 0.0  # in seconds
         self.last_position = base.camera.getZ()
@@ -213,6 +213,9 @@ class MouseTunnel(ShowBase):
         # for reward control
         self.reward_window = REWARD_WINDOW  # in seconds
         self.reward_elapsed = 0.0
+        
+        self.new_reward_elapsed = list()
+        
         # self.reward_volume = 0.008 # in mL. this is for the hardcoded 0.1 seconds of reward time
         self.reward_volume = int(REWARD_VOLUME)  # in uL, for the stepper motor
         self.reward_time = 0.1  # in sec, based on volume. hard coded right now but should be modified by the (1) calibration and (2) optionally by the main loop for dynamic reward scheduling
@@ -267,7 +270,9 @@ class MouseTunnel(ShowBase):
         # initialize the image list and populate what images you want included
 
 
-        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN/*.tif')
+#        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN/*.tif')
+        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN2/*.tif')  #Newest images
+
         # print(self.img_list)
         self.original_indices = [43,-18]#manually counted, grump
         self.imageTextures =[loader.loadTexture(img) for img in self.img_list]
@@ -387,6 +392,11 @@ class MouseTunnel(ShowBase):
         self.save_data()
         self.stim_duration = self.get_trial_duration()
         self.fixationPoint.destroy()
+#        import pickle
+#        with open('objs.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+#            pickle.dump([self.stim_duration,self.distribution_type_inputs], f)
+#            print('variables saved!!!')
+
 
         self.in_reward_window = True
         print("start")
@@ -432,7 +442,6 @@ class MouseTunnel(ShowBase):
             return 0
 
     def stop_a_presentation(self):
-        self.trialDurationData.append(self.stim_duration)
         if self.stim_started == True:
             self.dr2.setDimensions(0, 0.001, 0, 0.001)#make this really,really small so it's not seeable by the subject
             # self.bufferViewer.toggleEnable()
@@ -448,7 +457,7 @@ class MouseTunnel(ShowBase):
             #     self.feebackScoreText.setX(.5)
             #     self.feedback_score_startime = globalClock.getFrameTime()
             self.scoreData.append(self.current_score)
-            #self.trialDurationData.extend(self.stim_duration)
+            self.trialDurationData.append(self.stim_duration)
             self.fixationPoint = OnscreenImage(image='models/fixationpoint.jpg', pos=(0, 0,0),scale=0.01)
 
             
@@ -734,6 +743,13 @@ class MouseTunnel(ShowBase):
             if self.reward_elapsed < self.reward_window:
             
                 self.reward_elapsed += globalClock.getDt()
+                self.new_reward_elapsed.append(self.reward_elapsed)
+                
+#                import pickle
+#                with open('objs.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+#                    pickle.dump([self.stim_duration,self.distribution_type_inputs, self.new_rew_control], f)
+#                    print('variables saved!!!')
+
                 self.check_arrows()
                 if not self.AUTO_REWARD:
                     if self.check_arrows() == 1:  # if check arrows returns a 1 the right arrow was pressed during stimulus presentation
@@ -770,6 +786,12 @@ class MouseTunnel(ShowBase):
                 else:
                     self._give_reward(self.reward_volume)
                     self.in_reward_window = False;
+                    
+#                    import pickle
+#                    with open('objs.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+#                        pickle.dump([self.stim_duration,self.distribution_type_inputs, self.rew_control], f)
+#                        print('variables saved!!!')
+
                     self.reward_elapsed = 0.  # reset
                     # self.reward_elapsed=0.
                     # base.setBackgroundColor([1, 1, 0])
@@ -861,7 +883,6 @@ class MouseTunnel(ShowBase):
                                  str(self.session_start_time.hour) + '_' + \
                                  str(self.session_start_time.minute) + '_' + \
                                  str(self.session_start_time.second))
- 
         if not os.path.isdir(save_path):
             os.mkdir(save_path)
 
@@ -878,22 +899,16 @@ class MouseTunnel(ShowBase):
         np.save(os.path.join(save_path, 'imageTimeData.npy'), self.imageTimeData)
         np.save(os.path.join(save_path, 'scoreData.npy'), self.scoreData)
         np.save(os.path.join(save_path, 'trialDurationData.npy'), self.trialDurationData)
-
-        return save_path
-
+        np.save(os.path.join(save_path, 'dT.npy'), self.new_reward_elapsed)
 
     def close(self):
-        self.saveLabel.setX(0.)
-        self.saveLabel2.setX(0.)
-        time.sleep(0.5)
-        save_path = self.save_data()
+        self.save_data()
 
         print('rewardData:')
         print(np.shape(self.rewardData))
-        
-        #push anonymized data to Denman Lab Open Science Framework project for human psychophysics
-        subprocess.call('osf -p 7xruh -u denmanlab@gmail.com upload -r '+save_path+' data/'+os.path.basename(save_path),shell=True)
-
+        os.system('git add data/*')
+        os.system('git commit -m "add data"')
+        os.system('git push')
         sys.exit(0)
 
 app = MouseTunnel()
