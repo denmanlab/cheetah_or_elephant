@@ -910,9 +910,11 @@ class MouseTunnel(ShowBase):
 
         print('rewardData:')
         print(np.shape(self.rewardData))
-        os.system('git add data/*')
-        os.system('git commit -m "add data"')
-        os.system('git push')
+        try:
+            #push anonymized data to Denman Lab Open Science Framework project for human psychophysics
+            subprocess.call('osf -p 7xruh -u denmanlab@gmail.com upload -r '+save_path+' data/'+os.path.basename(save_path),shell=True)
+        except:pass
+        
         sys.exit(0)
 
 app = MouseTunnel()
