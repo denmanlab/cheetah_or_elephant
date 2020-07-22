@@ -49,15 +49,17 @@ os.system('git config core.sshCommand "ssh -i .ssh/user-key"')
 os.system('git pull')
 
 #load (or make) the an anonymized used id for this repo
-extant_user_ids = np.load('.user_ids.npy')
-if os.path.isfile('.user_id.npy'):
-    MOUSE_ID = 'user'+str(np.load('.user_ids.npy')[0])
-else:
-    extant_user_ids = np.append(extant_user_ids,int(len(extant_user_ids)))
-    np.save('.user_id.npy',np.array([extant_user_ids[-1]]))  
-    np.save('.user_ids.npy',extant_user_ids)  
-    MOUSE_ID = 'user'+str(extant_user_ids[-1])
-    
+try:
+    extant_user_ids = np.load('.user_ids.npy').astype(int)
+    if os.path.isfile('.user_id.npy'):
+        MOUSE_ID = 'user'+str(np.load('.user_ids.npy')[0])
+    else:
+        extant_user_ids = np.append(extant_user_ids,int(len(extant_user_ids)))
+        np.save('.user_id.npy',np.array([extant_user_ids[-1]]))  
+        np.save('.user_ids.npy',np.array(extant_user_ids)).astype(int)
+        MOUSE_ID = 'user'+str(extant_user_ids[-1])
+except: 
+    MOUSE_ID = np.random.randint(0,100)
 # getopt.getopt(args, options, [long_options])
 
 # try:
@@ -443,6 +445,9 @@ class MouseTunnel(ShowBase):
 
     def stop_a_presentation(self):
         if self.stim_started == True:
+            if self.stim_elapsed > self.stim_duration:
+                self.trialDurationData.append(self.stim_duration)
+            else: self.trialDurationData.append(self.stim_duration)
             self.dr2.setDimensions(0, 0.001, 0, 0.001)#make this really,really small so it's not seeable by the subject
             # self.bufferViewer.toggleEnable()
             self.stim_started = False
@@ -457,7 +462,6 @@ class MouseTunnel(ShowBase):
             #     self.feebackScoreText.setX(.5)
             #     self.feedback_score_startime = globalClock.getFrameTime()
             self.scoreData.append(self.current_score)
-            self.trialDurationData.append(self.stim_duration)
             self.fixationPoint = OnscreenImage(image='models/fixationpoint.jpg', pos=(0, 0,0),scale=0.01)
 
             
