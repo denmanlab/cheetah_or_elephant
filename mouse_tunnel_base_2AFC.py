@@ -12,7 +12,7 @@ from panda3d.core import Mat4, WindowProperties, CardMaker, NodePath, TextureSta
 from panda3d.core import KeyboardButton
 from direct.gui.OnscreenText import OnscreenText
 
-import sys, glob, time, datetime, os, getopt
+import sys, glob, time, datetime, os, getopt, subprocess
 from math import pi, sin, cos
 from numpy.random import randint, exponential
 from numpy import arange, concatenate
@@ -45,8 +45,7 @@ REWARD_VOLUME = 10  # in µL
 REWARD_WINDOW = 2.0  # in seconds
 
 #make sure we have the most recent user list
-os.system('git config core.sshCommand "ssh -i .ssh/user-key"')
-os.system('git pull')
+subprocess.call('osf -p cy643 -u denmanlab@gmail.com fetch -f -U .user_ids.npy',shell=True)
 
 #load (or make) the an anonymized used id for this repo
 try:
@@ -914,7 +913,7 @@ class MouseTunnel(ShowBase):
             #push anonymized data to Denman Lab Open Science Framework project for human psychophysics
             subprocess.call('osf -p 7xruh -u denmanlab@gmail.com upload -r '+save_path+' data/'+os.path.basename(save_path),shell=True)
         except:pass
-        
+
         sys.exit(0)
 
 app = MouseTunnel()
