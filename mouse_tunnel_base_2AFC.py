@@ -1,6 +1,16 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Created on Wed Jul 22 14:33:52 2020
+
+@latest author: elizabethstubblefield
+"""
+
 
 ## Beth updated 7.6.20 to include updating/saving frame rates (dT)
+## Also updated 8.4.20 the sleep time after key press so rxn times aren't skewed high (ll.750ish)... 
+## mean(rxn times) seemed to approx. the sleep time & so will max frame rate; EAS removed sleep time
+## l. 287 now calls folder w/ same #images at ea. %(easier) from git dir/models/all_same_ea/*.tif'
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
@@ -200,7 +210,7 @@ class MouseTunnel(ShowBase):
         self.interval = 0
         self.time_waiting_in_cue_zone = 0
         self.wait_time = 1.83
-        self.stim_duration = 1.0  # in seconds
+        self.stim_duration = 0  # in seconds
         
        
         self.distribution_type = np.random.uniform#
@@ -215,7 +225,7 @@ class MouseTunnel(ShowBase):
         self.reward_window = REWARD_WINDOW  # in seconds
         self.reward_elapsed = 0.0
         
-        self.new_reward_elapsed = list()
+#        self.new_dt = list()
         
         # self.reward_volume = 0.008 # in mL. this is for the hardcoded 0.1 seconds of reward time
         self.reward_volume = int(REWARD_VOLUME)  # in uL, for the stepper motor
@@ -262,6 +272,7 @@ class MouseTunnel(ShowBase):
         self.imageTimeData = []
         self.scoreData = []
         self.trialDurationData = []
+        self.new_dt = []
 
         # INITIALIZE KEY SENSOR, for backup inputs and other user controls
         self.keys = key.KeyStateHandler()
@@ -272,7 +283,9 @@ class MouseTunnel(ShowBase):
 
 
 #        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN/*.tif')
-        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN2/*.tif')  #Newest images
+#        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN2/*.tif')  #Newest images
+#        self.img_list = glob.glob('/Users/elizabethstubblefield/Desktop/cheetah_or_elephant/composite_images/masks/all_same_num_ea/*.tif')  #Newest images
+        self.img_list = glob.glob('models/all_same_ea/*.tif')  #Newest images
 
         # print(self.img_list)
         self.original_indices = [43,-18]#manually counted, grump
@@ -596,7 +609,9 @@ class MouseTunnel(ShowBase):
     def gameLoop(self, task):
         # get the time elapsed since the next frame.
         dt = globalClock.getDt()
-        current_time = globalClock.getFrameTime()
+        self.new_dt.append(dt)                  #Store the append here for dt
+        
+        current_time = globalClock.getFrameTime()    #This is for the key press
         if current_time > self.feedback_score_startime + 1.5:
             self.feebackScoreText.setX(3.)
         # get the camera position.
@@ -733,11 +748,11 @@ class MouseTunnel(ShowBase):
         if self.rightArrowIsPressed:
             self.rightKeyData.extend([globalClock.getFrameTime()])
             print('right arrow at: ' + str(self.rightKeyData[-1]))
-            time.sleep(.5)  # this only allows for one keystroke to be recorded every 0.5s
+#            time.sleep(.2)  #EAS changed this only allows for one keystroke to be recorded every 0.5s
         elif self.leftArrowIsPressed:
             self.leftKeyData.extend([globalClock.getFrameTime()])
             print('left arrow at: ' + str(self.leftKeyData[-1]))
-            time.sleep(.5)  # this only allows for one keystroke to be recorded every 0.5s
+#            time.sleep(.2)  #EAS changed this only allows for one keystroke to be recorded every 0.5s
         return Task.cont
 
     def rewardControl(self, task):
@@ -746,7 +761,7 @@ class MouseTunnel(ShowBase):
             if self.reward_elapsed < self.reward_window:
             
                 self.reward_elapsed += globalClock.getDt()
-                self.new_reward_elapsed.append(self.reward_elapsed)
+#                self.new_reward_elapsed.append(self.reward_elapsed)
                 
 #                import pickle
 #                with open('objs.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
@@ -902,7 +917,7 @@ class MouseTunnel(ShowBase):
         np.save(os.path.join(save_path, 'imageTimeData.npy'), self.imageTimeData)
         np.save(os.path.join(save_path, 'scoreData.npy'), self.scoreData)
         np.save(os.path.join(save_path, 'trialDurationData.npy'), self.trialDurationData)
-        np.save(os.path.join(save_path, 'dT.npy'), self.new_reward_elapsed)
+        np.save(os.path.join(save_path, 'dT.npy'), self.new_dt)
 
     def close(self):
         self.save_data()
