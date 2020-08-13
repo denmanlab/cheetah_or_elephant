@@ -285,7 +285,7 @@ class MouseTunnel(ShowBase):
 #        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN/*.tif')
 #        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN2/*.tif')  #Newest images
 #        self.img_list = glob.glob('/Users/elizabethstubblefield/Desktop/cheetah_or_elephant/composite_images/masks/all_same_num_ea/*.tif')  #Newest images
-        self.img_list = glob.glob('models/all_same_ea/*.tif')  #Newest images
+        self.img_list = glob.glob('models/all_same_num_ea/*.tif')  #Newest images
 
         # print(self.img_list)
         self.original_indices = [43,-18]#manually counted, grump
@@ -433,14 +433,15 @@ class MouseTunnel(ShowBase):
             self.dr2.setDimensions(0.25, 0.75, 0.25, 0.75)  # floats (left, right, bottom, top)
             self.img_id = self.img_list[i] #this assigns the current presented image to self.image_id
             print(self.img_id)
-            self.imageData.extend(self.img_id)
+            # self.imageData.extend(self.img_id)
 
         if self.stimtype == 'image_sequence':
             self.imagesTexture.setTime(0.)
             self.dr2.setDimensions(0.4, 0.8, 0.4, 0.70)  # floats (left, right, bottom, top)
             self.imagesTexture.play()
         self.imageTimeData.extend([globalClock.getFrameTime()])
-        self.imageData.extend(self.img_id)
+        print(self.img_id)
+        self.imageData.extend([self.img_id])
 
     def check_arrows(self):
         # this function will report which arrow was pressed. right = 1, left = 2, no press = 0
