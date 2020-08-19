@@ -11,6 +11,7 @@ Created on Wed Jul 22 14:33:52 2020
 ## Also updated 8.4.20 the sleep time after key press so rxn times aren't skewed high (ll.750ish)... 
 ## mean(rxn times) seemed to approx. the sleep time & so will max frame rate; EAS removed sleep time
 ## l. 287 now calls folder w/ same #images at ea. %(easier) from git dir/models/all_same_ea/*.tif'
+## l. 291 no longer hard-coded for selecting easy images for the first 4 trials
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
@@ -283,12 +284,22 @@ class MouseTunnel(ShowBase):
 
 
 #        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN/*.tif')
-#        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN2/*.tif')  #Newest images
+#        self.img_list = glob.glob('models/2AFC_IMAGES_HUMAN2/*.tif')  
 #        self.img_list = glob.glob('/Users/elizabethstubblefield/Desktop/cheetah_or_elephant/composite_images/masks/all_same_num_ea/*.tif')  #Newest images
-        self.img_list = glob.glob('models/all_same_num_ea/*.tif')  #Newest images
+        self.img_list = glob.glob('models/all_same_ea/*.tif')  #Newest images
+
+        #No longer hard-coded:
+        self.original_indices = [0,0]  #this was manually counted... first number must was the index of the first easy img; was [43, -18]
+        for ndx, name in enumerate(self.img_list):
+            if 'Cheetah255' in name:
+                self.original_indices[0] = ndx
+            elif 'elephant0' in name:
+                self.original_indices[1] = ndx
 
         # print(self.img_list)
-        self.original_indices = [43,-18]#manually counted, grump
+        
+#        self.original_indices = [43,-18] #manually counted, grump  #Problematic w/out at least 43 images in the folder        
+
         self.imageTextures =[loader.loadTexture(img) for img in self.img_list]
         self.img_id = None  # this variable used so we know which stimulus is being presented
         self.img_mask = None #this tells us what the image mask being presented is
@@ -411,7 +422,6 @@ class MouseTunnel(ShowBase):
 #            pickle.dump([self.stim_duration,self.distribution_type_inputs], f)
 #            print('variables saved!!!')
 
-
         self.in_reward_window = True
         print("start")
         if have_nidaq:
@@ -425,24 +435,24 @@ class MouseTunnel(ShowBase):
         if self.stimtype == 'random image':
 
             if len(self.trialData) < 4:
-                i=self.original_indices[int(np.round(np.random.random()))]
+                i=self.original_indices[int(np.round(np.random.random()))]   #commented out due to <43 images [see l. 290ish]
                 self.stim_duration = 2.0
-            else:
+            else:                                                            #commented out due to <43 images
                 i = randint(len(self.imageTextures))
+                
             self.card.setTexture(self.imageTextures[i],0)
             self.dr2.setDimensions(0.25, 0.75, 0.25, 0.75)  # floats (left, right, bottom, top)
             self.img_id = self.img_list[i] #this assigns the current presented image to self.image_id
             print(self.img_id)
-            # self.imageData.extend(self.img_id)
-
+            self.imageData.extend(self.img_id)                    
+        
         if self.stimtype == 'image_sequence':
             self.imagesTexture.setTime(0.)
             self.dr2.setDimensions(0.4, 0.8, 0.4, 0.70)  # floats (left, right, bottom, top)
             self.imagesTexture.play()
         self.imageTimeData.extend([globalClock.getFrameTime()])
-        print(self.img_id)
-        self.imageData.extend([self.img_id])
-
+        self.imageData.extend(self.img_id)
+  
     def check_arrows(self):
         # this function will report which arrow was pressed. right = 1, left = 2, no press = 0
         if self.rightArrowIsPressed:
@@ -927,7 +937,7 @@ class MouseTunnel(ShowBase):
         print(np.shape(self.rewardData))
         try:
             #push anonymized data to Denman Lab Open Science Framework project for human psychophysics
-            subprocess.call('osf -p 7xruh -u denmanlab@gmail.com upload -r '+save_path+' data/'+os.path.basename(save_path),shell=True)
+            subprocess.call('osf -p 7xruh -u denmanlab@gmail.com upload -r '+save_path+' data/'+os.path.basename(save_path),shell=True)     #commented these lines out to test if saving to osf is the hangup; it's not
         except:pass
 
         sys.exit(0)
