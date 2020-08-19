@@ -293,7 +293,7 @@ class MouseTunnel(ShowBase):
         for ndx, name in enumerate(self.img_list):
             if 'Cheetah255' in name:
                 self.original_indices[0] = ndx
-            elif 'elephant0' in name:
+            elif 'Elephant0' in name:
                 self.original_indices[1] = ndx
 
         # print(self.img_list)
