@@ -12,6 +12,7 @@ Created on Wed Jul 22 14:33:52 2020
 ## mean(rxn times) seemed to approx. the sleep time & so will max frame rate; EAS removed sleep time
 ## l. 287 now calls folder w/ same #images at ea. %(easier) from git dir/models/all_same_ea/*.tif'
 ## l. 291 no longer hard-coded for selecting easy images for the first 4 trials
+## l. 793-830ish updated 50/50 images to be rewarded 1/2 the time 8.24.20
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
@@ -301,7 +302,7 @@ class MouseTunnel(ShowBase):
 #        self.original_indices = [43,-18] #manually counted, grump  #Problematic w/out at least 43 images in the folder        
 
         self.imageTextures =[loader.loadTexture(img) for img in self.img_list]
-        self.img_id = None  # this variable used so we know which stimulus is being presented
+        self.img_id = None   #this variable is used so we know which stimulus is being presented
         self.img_mask = None #this tells us what the image mask being presented is
 
         # self._setupEyetracking()
@@ -381,7 +382,7 @@ class MouseTunnel(ShowBase):
             if self.stim_started == True:
                 self.stop_a_presentation()
 
-                # This line uses slices to take the front of the list and put it on the
+            # This line uses slices to take the front of the list and put it on the
             # back. For more information on slices check the Python manual
             self.tunnel = self.tunnel[1:] + self.tunnel[0:1]
 
@@ -781,14 +782,28 @@ class MouseTunnel(ShowBase):
 
                 self.check_arrows()
                 if not self.AUTO_REWARD:
+                    
                     if self.check_arrows() == 1:  # if check arrows returns a 1 the right arrow was pressed during stimulus presentation
                         # note reaction time
-
                         if self.img_id.find("Elephant") != -1: #if the current image file contains the string in () the value is not -1
                             self._give_reward(self.reward_volume)
                             print('correct: image was mostly elephant')
                             self.in_reward_window = False;
                             self.reward_elapsed = 0.  # reset
+                        
+                        elif 'Same' in self.img_id:                     #updated 8.24.20: reward 50/50 images 1/2 the time
+                            if round(np.random.random(1)[0]):
+                                self._give_reward(self.reward_volume)
+                                print('correct: image was same')
+                                self.in_reward_window = False;
+                                self.reward_elapsed = 0.  # reset
+                            else:
+                                print(self.img_mask)
+                                print('incorrect: image was same')
+                                self.in_reward_window = False
+                                self.reward_elapsed = 0.  # reset
+                                self.score=0
+                                self.show_the_score()
                         else:
                             print(self.img_mask)
                             print('image was not mostly elephant!')
@@ -796,12 +811,27 @@ class MouseTunnel(ShowBase):
                             self.reward_elapsed = 0.  # reset
                             self.score=0
                             self.show_the_score()
-                    if self.check_arrows() == 2:  # if check arrows returns a 2 the left arrow was pressed during stimulus presentation
-                        if self.img_id.find("Cheetah") != -1: #if the current image file contains the string in () the value is not -1
+                                                        
+                    if self.check_arrows() == 2:                          #if check arrows returns a 2 the left arrow was pressed during stimulus presentation
+                        if self.img_id.find("Cheetah") != -1:             #if the current image file contains the string in () the value is not -1
                             self._give_reward(self.reward_volume)
                             print('correct: image was mostly cheetah')
                             self.in_reward_window = False;
                             self.reward_elapsed = 0.  # reset
+                        
+                        elif 'Same' in self.img_id:                      #updated 8.24.20: reward 50/50 images 1/2 the time
+                            if round(np.random.random(1)[0]):
+                                self._give_reward(self.reward_volume)
+                                print('correct: image was same')
+                                self.in_reward_window = False;
+                                self.reward_elapsed = 0.  # reset
+                            else:
+                                print(self.img_mask)
+                                print('incorrect: image was same')
+                                self.in_reward_window = False
+                                self.reward_elapsed = 0.  # reset
+                                self.score=0
+                                self.show_the_score()
                         else:
                             print(self.img_mask)
                             print('image was not mostly cheetah!')
@@ -809,24 +839,17 @@ class MouseTunnel(ShowBase):
                             self.reward_elapsed = 0.  # reset
                             self.score=0
                             self.show_the_score()
-                    # else:
-                        # self.in_reward_window = False
-                        # self.reward_elapsed = 0.  # reset
+                    
+                        
+
                 else:
                     self._give_reward(self.reward_volume)
                     self.in_reward_window = False;
-                    
-#                    import pickle
-#                    with open('objs.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
-#                        pickle.dump([self.stim_duration,self.distribution_type_inputs, self.rew_control], f)
-#                        print('variables saved!!!')
-
                     self.reward_elapsed = 0.  # reset
-                    # self.reward_elapsed=0.
                     # base.setBackgroundColor([1, 1, 0])
 
-            # if self.keys[key.NUM_1]:
-            #     print('reward!')
+#            # if self.keys[key.NUM_1]:
+#            #     print('reward!')
             else:
                 self.score=0
                 self.show_the_score()
