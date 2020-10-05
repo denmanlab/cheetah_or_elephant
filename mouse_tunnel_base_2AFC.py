@@ -13,6 +13,7 @@ Created on Wed Jul 22 14:33:52 2020
 ## l. 287 now calls folder w/ same #images at ea. %(easier) from git dir/models/all_same_ea/*.tif'
 ## l. 291 no longer hard-coded for selecting easy images for the first 4 trials
 ## l. 793-830ish updated 50/50 images to be rewarded 1/2 the time 8.24.20
+## l. 220- and 436ish have new code for giving heigher weights for shorter trials
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
@@ -213,14 +214,36 @@ class MouseTunnel(ShowBase):
         self.time_waiting_in_cue_zone = 0
         self.wait_time = 1.83
         self.stim_duration = 0  # in seconds
-        
-       
-        self.distribution_type = np.random.uniform#
-#        self.distribution_type_inputs = [0.05,1.5] #can be anytong should match 
-        self.distribution_type_inputs = [0.016,0.4] #change the min & max stim duration times
+    
+#        self.distribution_type = np.random.uniform#
+#        self.distribution_type_inputs = [0.016,0.4] #change the min & max stim duration times
+
+    #New lines    EAS: set weights higher for faster image durations
+        self.durWeights = list()
+        a = np.linspace(0.016,0.4,10)
+        for i,j in enumerate(a):
+            if j<0.1:
+                p1 = 0.25
+                self.durWeights.append(p1)
+            elif j > 0.1 and j < 0.21:
+                p1 = 0.1
+                self.durWeights.append(p1)
+            elif j> 0.21:
+                p1 = 0.04
+                self.durWeights.append(p1)
+        self.rng = np.random.default_rng()
+        a = np.asarray(a)
+        self.distribution_type_inputs = a
+        #subset_size = len(p)
+
+    #End new lines
+      
+#        self.distribution_type_inputs = [0.05,1.5]  #can be anytong should match 
+#        self.distribution_type_inputs = [0.016,0.4] #change the min & max stim duration times
+#        self.distribution_type_inputs = [0.016,0.4, 10] #change the min & max stim duration times
 
         self.max_stim_duration = 1.0  # in seconds
-        self.stim_elapsed = 0.0  # in seconds
+        self.stim_elapsed = 0.0       # in seconds
         self.last_position = base.camera.getZ()
         self.position_on_track = base.camera.getZ()
         # for reward control
@@ -410,13 +433,16 @@ class MouseTunnel(ShowBase):
             )
             self.tunnelMove.start()
     
-    def get_trial_duration(self):
-        return self.distribution_type(*self.distribution_type_inputs)
+    def get_trial_duration(self):      #EAS updated 10.5.20
+        self.stim_duration = self.rng.choice(self.distribution_type_inputs, 1, p=self.durWeights)  #pull out one value in array a, w/ probability based on weights
+        return self.stim_duration[0]
+
+#        return self.distribution_type(*self.distribution_type_inputs)
 
     def start_a_presentation(self):
-
         self.save_data()
         self.stim_duration = self.get_trial_duration()
+        
         self.fixationPoint.destroy()
 #        import pickle
 #        with open('objs.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
