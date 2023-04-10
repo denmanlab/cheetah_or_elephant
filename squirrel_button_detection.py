@@ -53,15 +53,15 @@ def on_draw():
     #check to see if we are in an ITI. if we are at the end of it, start a trial
     # if timer.time > params.last_end_time + params.iti:
     #     if params.bool_iti:
-    if params.center_button:
-        if not params.stim_on:#start drawing
+    if params.center_button: # if center button is pressed down
+        if not params.stim_on:#start drawing if stimulus is not already on
             print('start')
             start_trial()
-        else: #keep drawing
+        else: #keep drawing if stimulus is already on
             sprite.scale = 0.2
             sprite.draw()
     else:
-        if params.stim_on: end_trial()   #check to see if the button is still down
+        if params.stim_on: end_trial()   #check to see if the button is still down, if not stop drawing
     #     params.bool_iti=False
     # else: params.bool_iti=True
 
@@ -101,12 +101,12 @@ def end_trial():
 @game_window.event 
 def on_key_press(symbol, modifiers):
     if symbol == pyglet.window.key.A:
-        end_trial('left')
-    if symbol == pyglet.window.key.L:
-        end_trial('right')
+        params.center_button = True
+
 
 def on_key_release(symbol, modifiers):
-    pass
+    if symbol == pyglet.window.key.A:
+        params.center_button = False
 #====================================================================
 
 #set up joystick=====================================================
