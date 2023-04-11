@@ -47,7 +47,9 @@ timer.start()
 def on_draw():   
     game_window.clear()     # clear the window
 
-    params.center_button = joystick.button_state(53)
+    try:
+        params.center_button = joystick.button_state(53)
+    except:pass
     # print(params.center_button)
 
     #check to see if we are in an ITI. if we are at the end of it, start a trial
@@ -101,6 +103,7 @@ def end_trial():
 @game_window.event 
 def on_key_press(symbol, modifiers):
     if symbol == pyglet.window.key.A:
+        print('A')
         params.center_button = True
 
 
@@ -162,9 +165,9 @@ class InputController():
         print('down')
 #====================================================================
 # start the joystick listening
-board_port = glob.glob('/dev/cu.usbmodem*')[0]
-joystick=InputController(board_port)
-joystick.init()
+# board_port = glob.glob('/dev/cu.usbmodem*')[0]
+# joystick=InputController(board_port)
+# joystick.init()
 
 #start the game loop
 # pyglet.clock.schedule_interval(timer.update, 1/60.0)
