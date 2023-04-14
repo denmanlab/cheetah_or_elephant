@@ -63,7 +63,7 @@ def on_draw():
         params.button_1 = joystick.button_state(49)
         params.button_2 = joystick.button_state(45)
     except:pass
-    # print(params.center_button)
+    # print(params.button_1)
 
     #check to see if we are in an ITI. if we are at the end of it, start a trial
     # if timer.time > params.last_end_time + params.iti:
@@ -176,7 +176,7 @@ def on_key_release(symbol, modifiers):
 
 #set up joystick, button, and/or reward servo control==============================================
 class InputController():
-    def __init__(self,board_string,horizontal=0,vertical=1,digital_channels=[53,51],food_reward_pin=9):
+    def __init__(self,board_string,horizontal=0,vertical=1,digital_channels=[53,51,49,47,45,43],food_reward_pin=9):
         self.board =  ArduinoMega(board_string)
         self.horizontal_channel = horizontal
         self.vertical_channel = vertical
