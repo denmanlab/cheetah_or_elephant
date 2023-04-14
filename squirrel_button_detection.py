@@ -21,7 +21,7 @@ class Params():
 
         self.center_button, self.button_1, self.button_2 = 0,0,0
 
-        self.in_trial = False
+        self.in_trial,self.catch = False,False
 
         self.stim_contrast,self.stim_orientation,self.stim_spatial_frequency,self.stim_delay,self.button_down_time,self.stim_on_time,self.stim_off_time,self.stim_reaction_time,self.stim_rewarded,self.stim_reward_amount = \
         [],[],[],[],[],[],[],[],[],[]
@@ -60,8 +60,8 @@ def on_draw():
 
     try:
         params.center_button = joystick.button_state(53)
-        params.button_1 = joystick.button_state(49)
-        params.button_2 = joystick.button_state(45)
+        params.button_1 = joystick.button_state(49) #"blue"
+        params.button_2 = joystick.button_state(45) #"green"
     except:pass
     # print(params.button_1)
 
@@ -108,6 +108,8 @@ def setup_trial():
 
     contrasts = [0,0.05,0.1,0.2,0.4,0.8,1.0]
     contrast = contrasts[random.randint(7)]
+    if contrast == 0: params.catch=True
+    else: params.catch=False
     params.stim_contrast.append(contrast)
     sprite.color = (int(255*contrast),int(255*contrast),int(255*contrast))
 
@@ -142,15 +144,26 @@ def end_trial():
     params.in_trial=False
 
 def check_reaction_time(reaction_time):
-    print(reaction_time)
-    if reaction_time < 1.0:
-        joystick.move_servo(90)
-        joystick.move_servo(270)
-        params.stim_rewarded.append(True)
-        params.stim_reward_amount.append(180)
-    else:
-        params.stim_rewarded.append(False)
-        params.stim_reward_amount.append(0)
+    min_catch_hold_time  = 5.0
+    max_reaction_time = 1.0
+    if params.catch:
+        if reaction_time > min_catch_hold_time:
+            joystick.move_servo(90)
+            joystick.move_servo(270)
+            params.stim_rewarded.append(True)
+            params.stim_reward_amount.append(180)
+        else:
+            params.stim_rewarded.append(False)
+            params.stim_reward_amount.append(0)
+    else: 
+        if reaction_time < max_reaction_time:
+            joystick.move_servo(90)
+            joystick.move_servo(270)
+            params.stim_rewarded.append(True)
+            params.stim_reward_amount.append(180)
+        else:
+            params.stim_rewarded.append(False)
+            params.stim_reward_amount.append(0)
 
         #optionally add timeout here. 
 
