@@ -19,7 +19,7 @@ class Params():
         self.iti,self.bool_iti,self.bool_display,self.bool_reward_window,self.reward_vol,self.answer,self.bool_correct,self.time_,self.last_end_time, self.stim_on = \
             3.0,True,False,False,10,'left',False,0.0,0.0, False #initialize task control variables
 
-        self.center_button = 0
+        self.center_button, self.button_1, self.button_2 = 0,0,0
 
         self.in_trial = False
 
@@ -60,6 +60,8 @@ def on_draw():
 
     try:
         params.center_button = joystick.button_state(53)
+        params.button_1 = joystick.button_state(49)
+        params.button_2 = joystick.button_state(45)
     except:pass
     # print(params.center_button)
 
@@ -83,6 +85,11 @@ def on_draw():
         if params.stim_on: end_trial()   #check to see if the button is still down, if not stop drawing
     #     params.bool_iti=False
     # else: params.bool_iti=True
+
+    if params.button_1:
+        print('blue')
+    if params.button_2:
+        print('green')
 
 def setup_trial():
     if random.random() > 0.5: params.answer = 'left'
