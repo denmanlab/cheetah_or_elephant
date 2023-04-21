@@ -10,7 +10,7 @@ pyglet.resource.reindex()
 game_window = pyglet.window.Window(800, 600)
 grating_image = pyglet.resource.image('grating.jpg')
 grating_image.anchor_x = grating_image.width // 2 #center image
-sprite = pyglet.sprite.Sprite(grating_image, x = 100, y = 300)
+sprite = pyglet.sprite.Sprite(grating_image, x = 300, y = 300)
 #====================================================================
 
 # set up simple class that does nothing but hold parameter states
@@ -113,8 +113,8 @@ def setup_trial():
     params.stim_contrast.append(contrast)
     sprite.color = (int(255*contrast),int(255*contrast),int(255*contrast))
 
-    sprite.x = 300
-    sprite.y=300
+    # sprite.x = 300
+    # sprite.y=300
 
     params.in_trial=True
 
