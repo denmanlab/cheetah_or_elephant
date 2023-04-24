@@ -26,6 +26,7 @@ class Params():
         self.stim_contrast,self.stim_orientation,self.stim_spatial_frequency,self.stim_delay,self.button_down_time,self.stim_on_time,self.stim_off_time,self.stim_reaction_time,self.stim_rewarded,self.stim_reward_amount = \
         [],[],[],[],[],[],[],[],[],[]
 
+        self.current_angle = 0
     def save_params(self):
         pass
         #for p in [self.stim_contrast,self.stim_orientation,self.stim_spatial_frequency,self.stim_delay,self.button_down_time,self.stim_on_time,self.stim_off_time,self.stim_reaction_time,self.stim_rewarded,self.stim_reward_amount]:
@@ -182,6 +183,14 @@ def on_key_press(symbol, modifiers):
         print('T')
         joystick.move_servo(270)
 
+    if symbol == pyglet.window.key.P:
+        print(params.current_angle-1)
+        joystick.move_servo(params.current_angle-1)
+        params.current_angle-=1
+    if symbol == pyglet.window.key.L:
+        print(params.current_angle+1)
+        joystick.move_servo(params.current_angle+1)
+        params.current_angle+=1
 def on_key_release(symbol, modifiers):
     if symbol == pyglet.window.key.A:
         params.center_button = False
@@ -254,7 +263,7 @@ class InputController():
 board_port = glob.glob('/dev/cu.usbmodem*')[0]
 joystick=InputController(board_port)
 joystick.init()
-joystick.move_servo(270)
+joystick.move_servo(0)
 # except:pass # no arduino connected
 
 #start the game loop
